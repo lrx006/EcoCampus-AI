@@ -67,7 +67,7 @@
 
   function fetchPredict() {
     const params = getParams();
-    fetch((window.API_PREDICT || '/api/predict'), {
+    fetch('/api/predict', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(params),

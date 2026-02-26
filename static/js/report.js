@@ -27,7 +27,7 @@
       btn.innerHTML = '<i class="fas fa-magic me-2"></i>生成我的节能周报';
     }
 
-    fetch((window.API_REPORT || '/api/report'), {
+    fetch('/api/report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ score: score }),

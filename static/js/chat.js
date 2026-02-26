@@ -49,7 +49,7 @@
     inputEl.value = '';
     appendUserMessage(text);
     setLoading(true);
-    fetch((window.API_CHAT || '/api/chat'), {
+    fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text }),

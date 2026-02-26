@@ -141,29 +141,6 @@ export DEEPSEEK_API_KEY="你的 API Key"
 3. 自动识别为 Python 后，用默认的 `pip install -r requirements.txt` 和 `python app.py` 即可。
 4. 在 **Settings → Networking** 里生成公网域名。
 
-### 方式四：Netlify（静态站 + Serverless 函数）
-
-Netlify **不能直接跑 Flask**，需要把后端改成 **Netlify Functions**（无状态接口），前端在构建时生成静态站并注入接口地址。本项目已写好该方案，按下面步骤即可部署成网址。
-
-1. **本地先跑一次构建**（可选，用于检查）：
-   ```bash
-   python build_netlify.py
-   ```
-   会在项目根目录生成 `public/`（含 `index.html` 和 `static/`）。
-
-2. **部署到 Netlify**：
-   - 将项目推到 **GitHub**。
-   - 打开 [netlify.com](https://www.netlify.com) → **Add new site → Import an existing project**，连接该仓库。
-   - **Build command** 填：`python build_netlify.py`  
-   - **Publish directory** 填：`public`  
-   - **Functions directory** 填：`netlify/functions`（若界面有单独配置）。
-   - 在 **Site settings → Environment variables** 中如需 AI 周报，可添加 `DEEPSEEK_API_KEY`（可选）。
-   - 部署完成后会得到 `https://xxx.netlify.app` 这类网址。
-
-3. **说明**：
-   - 前端会请求 `/.netlify/functions/predict`、`/.netlify/functions/report`、`/.netlify/functions/chat`，由构建脚本自动注入，无需改前端代码。
-   - 节能助手对话在 Netlify 使用精简版回复库（`netlify/functions/lib/chat.py`）；完整版在 `app.py`，可自行复制过去。
-
 ### 方式三：PythonAnywhere（免费版可长期挂站）
 
 1. 注册 [pythonanywhere.com](https://www.pythonanywhere.com)。
