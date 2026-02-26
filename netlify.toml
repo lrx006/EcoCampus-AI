@@ -1,0 +1,13 @@
+# Netlify 部署配置
+# 后端为 Netlify Functions（Python），前端为静态站点
+
+[build]
+  command = "python build_netlify.py"
+  publish = "public"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "18"
+  PYTHON_VERSION = "3.11"
+
+# 若需 AI 周报，在 Netlify 后台 Environment variables 中添加 DEEPSEEK_API_KEY

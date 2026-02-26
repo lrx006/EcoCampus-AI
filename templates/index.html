@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoCampus AI - 校园节能指挥官</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <!-- 两侧装饰 -->
+  <div class="page-decor" aria-hidden="true">
+    <div class="decor decor-left"></div>
+    <div class="decor decor-right"></div>
+  </div>
+
+  <!-- 左侧功能栏：快捷入口 + 今日数据 -->
+  <aside id="sidebarLeft" class="sidebar sidebar-left" aria-label="快捷与今日数据">
+    <button type="button" class="sidebar-toggle" id="sidebarLeftToggle" aria-label="收起/展开"><i class="fas fa-chevron-left"></i></button>
+    <div class="sidebar-inner">
+      <div class="sidebar-title"><i class="fas fa-compass me-2"></i><span class="sidebar-title-text">快捷</span></div>
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="sidebar-link nav-smooth"><i class="fas fa-chart-line"></i><span>智能预测</span></a>
+        <a href="#quiz" class="sidebar-link nav-smooth"><i class="fas fa-gamepad"></i><span>知识闯关</span></a>
+        <a href="#report" class="sidebar-link nav-smooth"><i class="fas fa-file-alt"></i><span>我的周报</span></a>
+        <a href="#tips" class="sidebar-link nav-smooth"><i class="fas fa-lightbulb"></i><span>节能贴士</span></a>
+        <a href="#chat" class="sidebar-link nav-smooth"><i class="fas fa-comments"></i><span>节能助手</span></a>
+      </nav>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-title"><i class="fas fa-calendar-day me-2"></i><span class="sidebar-title-text">今日</span></div>
+      <div class="sidebar-stats">
+        <div class="sidebar-stat"><span class="sidebar-stat-num" id="sidebarStatPredict">0</span><span class="sidebar-stat-label">预测</span></div>
+        <div class="sidebar-stat"><span class="sidebar-stat-num" id="sidebarStatQuiz">0</span><span class="sidebar-stat-label">最佳</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 右侧功能栏：最近预测 + 情景预设 -->
+  <aside id="sidebarRight" class="sidebar sidebar-right" aria-label="最近预测与情景">
+    <button type="button" class="sidebar-toggle" id="sidebarRightToggle" aria-label="收起/展开"><i class="fas fa-chevron-right"></i></button>
+    <div class="sidebar-inner">
+      <div class="sidebar-title"><i class="fas fa-history me-2"></i><span class="sidebar-title-text">最近预测</span></div>
+      <ul id="sidebarRecentList" class="sidebar-recent list-unstyled mb-0 small"></ul>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-title"><i class="fas fa-sliders-h me-2"></i><span class="sidebar-title-text">情景</span></div>
+      <div class="sidebar-presets">
+        <button type="button" class="sidebar-preset-btn preset-btn" data-hour="9" data-temp="25" data-holiday="0">工作日</button>
+        <button type="button" class="sidebar-preset-btn preset-btn" data-hour="20" data-temp="30" data-holiday="0">夏夜</button>
+        <button type="button" class="sidebar-preset-btn preset-btn" data-hour="14" data-temp="28" data-holiday="1">节假日</button>
+      </div>
+    </div>
+  </aside>
+
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-ecocampus">
+    <div class="container">
+      <a class="navbar-brand" href="/"><i class="fas fa-leaf me-2"></i>EcoCampus AI</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="切换导航">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarMain">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link nav-smooth active" href="#" data-section="hero"><i class="fas fa-home me-1"></i>首页</a></li>
+          <li class="nav-item"><a class="nav-link nav-smooth" href="#dashboard"><i class="fas fa-chart-line me-1"></i>节能数据</a></li>
+          <li class="nav-item"><a class="nav-link nav-smooth" href="#quiz"><i class="fas fa-gamepad me-1"></i>知识闯关</a></li>
+          <li class="nav-item"><a class="nav-link nav-smooth" href="#report"><i class="fas fa-file-alt me-1"></i>周报</a></li>
+          <li class="nav-item"><a class="nav-link nav-smooth" href="#chat"><i class="fas fa-comments me-1"></i>助手</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4 main-content">
+    <div class="text-center py-3 py-md-4 hero-block">
+      <h1 class="hero-title display-5 mb-2">EcoCampus AI <span class="accent-mint">校园节能指挥官</span></h1>
+      <p class="lead text-muted mb-2"><i class="fas fa-bolt text-warning me-1"></i>智慧校园 · 绿色节能 · AI 赋能</p>
+      <div class="hero-tip-wrap">
+        <i class="fas fa-lightbulb text-warning me-2"></i>
+        <span id="heroTip" class="hero-tip-text">加载小贴士…</span>
+      </div>
+    </div>
+
+    <!-- 快捷功能区 -->
+    <section class="quick-actions section-reveal">
+      <div class="row g-3 g-md-4">
+        <div class="col-6 col-md-3">
+          <a href="#dashboard" class="quick-action-card card border-0 rounded-4 text-decoration-none h-100 nav-smooth" aria-label="跳转到智能预测">
+            <div class="card-body text-center py-4">
+              <i class="fas fa-chart-line fa-2x accent-mint mb-2"></i>
+              <div class="small fw-600 text-dark">智能预测</div>
+              <div class="small text-muted">能耗模拟</div>
+            </div>
+          </a>
+        </div>
+        <div class="col-6 col-md-3">
+          <a href="#quiz" class="quick-action-card card border-0 rounded-4 text-decoration-none h-100 nav-smooth" aria-label="跳转到知识闯关">
+            <div class="card-body text-center py-4">
+              <i class="fas fa-gamepad fa-2x accent-mint mb-2"></i>
+              <div class="small fw-600 text-dark">知识闯关</div>
+              <div class="small text-muted">10 关挑战</div>
+            </div>
+          </a>
+        </div>
+        <div class="col-6 col-md-3">
+          <a href="#report" class="quick-action-card card border-0 rounded-4 text-decoration-none h-100 nav-smooth" aria-label="跳转到我的周报">
+            <div class="card-body text-center py-4">
+              <i class="fas fa-file-alt fa-2x accent-mint mb-2"></i>
+              <div class="small fw-600 text-dark">我的周报</div>
+              <div class="small text-muted">AI 评语</div>
+            </div>
+          </a>
+        </div>
+        <div class="col-6 col-md-3">
+          <a href="#tips" class="quick-action-card card border-0 rounded-4 text-decoration-none h-100 nav-smooth" aria-label="跳转到节能贴士">
+            <div class="card-body text-center py-4">
+              <i class="fas fa-lightbulb fa-2x accent-mint mb-2"></i>
+              <div class="small fw-600 text-dark">节能贴士</div>
+              <div class="small text-muted">每日一句</div>
+            </div>
+          </a>
+        </div>
+        <div class="col-6 col-md-3">
+          <a href="#chat" class="quick-action-card card border-0 rounded-4 text-decoration-none h-100 nav-smooth" aria-label="跳转到节能助手">
+            <div class="card-body text-center py-4">
+              <i class="fas fa-comments fa-2x accent-mint mb-2"></i>
+              <div class="small fw-600 text-dark">节能助手</div>
+              <div class="small text-muted">有问必答</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 今日数据 -->
+    <section id="stats" class="stats-strip section-reveal">
+      <div class="card border-0 rounded-4 overflow-hidden">
+        <div class="card-body py-3 px-4">
+          <div class="row g-0 text-center">
+            <div class="col-4 col-md-2">
+              <div class="stat-num text-primary" id="statPredictCount">0</div>
+              <div class="stat-label">今日预测</div>
+            </div>
+            <div class="col-4 col-md-2">
+              <div class="stat-num accent-mint" id="statQuizBest">0</div>
+              <div class="stat-label">闯关最佳</div>
+            </div>
+            <div class="col-4 col-md-2">
+              <div class="stat-num text-info" id="statReportCount">0</div>
+              <div class="stat-label">周报生成</div>
+            </div>
+            <div class="col-4 col-md-2 d-none d-md-block">
+              <div class="stat-num text-warning" id="statBadgeCount">0</div>
+              <div class="stat-label">成就徽章</div>
+            </div>
+            <div class="col-6 col-md-2 d-none d-md-block">
+              <div class="stat-num text-secondary small" id="statBadgeTotal">6</div>
+              <div class="stat-label">徽章总数</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 智能监控区 -->
+    <section id="dashboard" class="dashboard-section card shadow-sm border-0 overflow-hidden section-reveal">
+      <div class="card-body p-4">
+        <h2 class="h5 mb-4 section-title"><i class="fas fa-tachometer-alt me-2 accent-mint"></i>智能监控区</h2>
+        <div class="row g-4">
+          <!-- 左侧：环境模拟控制台 -->
+          <div class="col-lg-5">
+            <div class="control-panel card h-100">
+              <div class="card-header control-panel-header d-flex align-items-center justify-content-between">
+                <span class="control-panel-title"><i class="fas fa-sliders-h me-2"></i>环境模拟控制台</span>
+                <button type="button" class="btn btn-sm btn-outline-light border-0 rounded-circle p-2 control-reset-btn" id="controlResetBtn" title="重置模拟"><i class="fas fa-undo"></i></button>
+              </div>
+              <div class="card-body">
+                <div class="mb-4">
+                  <label class="form-label d-flex justify-content-between">
+                    <span>时间 (时)</span>
+                    <span class="value-display" id="hourValue">12</span>
+                  </label>
+                  <input type="range" class="form-range slider-mint" id="hourSlider" min="0" max="24" value="12" step="1">
+                </div>
+                <div class="mb-4">
+                  <label class="form-label d-flex justify-content-between">
+                    <span>室外温度 (℃)</span>
+                    <span class="value-display" id="tempValue">20</span>
+                  </label>
+                  <input type="range" class="form-range slider-mint" id="tempSlider" min="-5" max="40" value="20" step="1">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label d-flex justify-content-between">
+                    <span>是否节假日</span>
+                    <span class="value-display" id="holidayValue">否</span>
+                  </label>
+                  <input type="range" class="form-range slider-mint" id="holidaySlider" min="0" max="1" value="0" step="1">
+                </div>
+                <div class="preset-row mt-3 pt-3 border-top border-light">
+                  <label class="form-label small text-muted mb-2">情景预设</label>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-sm preset-btn" data-hour="9" data-temp="25" data-holiday="0">工作日白天</button>
+                    <button type="button" class="btn btn-sm preset-btn" data-hour="20" data-temp="30" data-holiday="0">夏季夜晚</button>
+                    <button type="button" class="btn btn-sm preset-btn" data-hour="14" data-temp="28" data-holiday="1">节假日</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 右侧：实时能耗仪表盘 -->
+          <div class="col-lg-7">
+            <div class="gauge-panel card h-100">
+              <div class="card-header gauge-panel-header">
+                <span class="gauge-panel-title"><i class="fas fa-gauge me-2"></i>实时能耗仪表盘</span>
+              </div>
+              <div class="card-body d-flex flex-column align-items-center">
+                <div class="gauge-wrapper position-relative">
+                  <canvas id="powerGauge" width="280" height="160"></canvas>
+                  <div class="gauge-value-overlay" id="powerValueOverlay">--</div>
+                </div>
+                <p class="text-muted small mt-2 mb-0">预测能耗 (kW)</p>
+                <div id="powerWarning" class="alert alert-danger mt-3 w-100 d-none" role="alert">
+                  ⚠️ 警告：建议关闭非必要设备
+                </div>
+                <div class="recent-predictions mt-3 w-100">
+                  <div class="small text-muted mb-1"><i class="fas fa-history me-1"></i>最近预测</div>
+                  <ul id="recentPredictionsList" class="recent-predictions-list list-unstyled mb-0 small"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 节能知识闯关 -->
+    <section id="quiz" class="quiz-section card shadow-sm border-0 overflow-hidden mt-5 section-reveal">
+      <div class="card-body p-4">
+        <h2 class="h5 mb-4 section-title"><i class="fas fa-seedling me-2 accent-mint"></i>节能知识闯关</h2>
+        <div class="quiz-container">
+          <!-- 开始界面 -->
+          <div id="quizStart" class="quiz-start-card card rounded-4 shadow">
+            <div class="card-body text-center py-5 px-4">
+              <div class="quiz-icon mb-3"><i class="fas fa-globe-americas fa-3x accent-mint"></i></div>
+              <h3 class="h4 mb-2">环保小达人挑战</h3>
+              <p class="text-muted mb-2">完成 10 关问答，赢取环保值</p>
+              <p id="quizBestScoreWrap" class="small text-muted mb-4 d-none">最佳成绩：<strong id="quizBestScore">0</strong> 分</p>
+              <button type="button" class="btn btn-ecocampus btn-lg rounded-pill px-4 btn-hover-lift" id="quizStartBtn"><i class="fas fa-play me-2"></i>开始挑战</button>
+            </div>
+          </div>
+          <!-- 题目卡片（翻转容器） -->
+          <div id="quizPlay" class="quiz-play-area d-none">
+            <div class="quiz-progress mb-3">
+              <span class="quiz-progress-text">第 <span id="quizLevelNum">1</span> / 10 关</span>
+              <div class="progress rounded-pill" style="height: 8px;">
+                <div class="progress-bar bg-success" id="quizProgressBar" style="width: 33%"></div>
+              </div>
+            </div>
+            <div class="quiz-card-wrapper" id="quizCardWrapper">
+              <div class="quiz-card-inner" id="quizCardInner">
+                <!-- 正面：题目与选项 -->
+                <div class="quiz-card-front card rounded-4 shadow">
+                  <div class="card-body p-4">
+                    <span class="quiz-level-badge rounded-pill" id="quizLevelBadge">电池回收</span>
+                    <h4 class="quiz-question mt-3 mb-4" id="quizQuestion"></h4>
+                    <div class="quiz-options" id="quizOptions"></div>
+                  </div>
+                </div>
+                <!-- 背面：AI 反馈 -->
+                <div class="quiz-card-back card rounded-4 shadow">
+                  <div class="card-body p-4">
+                    <div id="quizFeedbackContent" class="quiz-feedback"></div>
+                    <button type="button" class="btn btn-ecocampus rounded-pill mt-3 w-100 btn-hover-lift" id="quizNextBtn">下一关</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 闯关完成 -->
+          <div id="quizEnd" class="quiz-end-card card rounded-4 shadow d-none">
+            <div class="card-body text-center py-5 px-4">
+              <div class="quiz-icon mb-3"><i class="fas fa-trophy fa-3x text-warning"></i></div>
+              <h3 class="h4 mb-2">闯关完成</h3>
+              <p class="text-muted mb-2">你的环保值：<strong id="quizTotalScore">0</strong></p>
+              <p id="quizBestScoreEndWrap" class="small text-muted mb-3 d-none">最佳成绩：<strong id="quizBestScoreEnd">0</strong> 分</p>
+              <button type="button" class="btn btn-outline-ecocampus rounded-pill mt-3 btn-hover-lift" id="quizRestartBtn"><i class="fas fa-redo me-2"></i>再玩一次</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 生成节能周报 -->
+    <section id="report" class="report-section mt-5 section-reveal">
+      <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-body text-center py-5 px-4">
+          <i class="fas fa-file-chart-line fa-3x accent-mint mb-3 d-block"></i>
+          <h3 class="h5 mb-2">我的节能周报</h3>
+          <p class="text-muted small mb-4">根据闯关得分生成 AI 鼓励语</p>
+          <button type="button" class="btn btn-ecocampus btn-lg rounded-pill px-4 btn-hover-lift" id="reportGenerateBtn">
+            <i class="fas fa-magic me-2"></i>生成我的节能周报
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 成就徽章 -->
+    <section id="badges" class="badges-section mt-5 section-reveal">
+      <div class="card border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-4">
+          <h2 class="h5 mb-4 section-title"><i class="fas fa-award me-2 accent-mint"></i>成就徽章</h2>
+          <div class="row g-3">
+            <div class="col-6 col-md-4">
+              <div class="badge-card card rounded-3 h-100" data-badge="first_predict">
+                <div class="card-body text-center py-3">
+                  <i class="fas fa-bolt fa-2x mb-2 badge-icon"></i>
+                  <div class="small fw-600">首次预测</div>
+                  <div class="small text-muted">完成 1 次能耗预测</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-4">
+              <div class="badge-card card rounded-3 h-100" data-badge="quiz_done">
+                <div class="card-body text-center py-3">
+                  <i class="fas fa-flag-checkered fa-2x mb-2 badge-icon"></i>
+                  <div class="small fw-600">闯关达人</div>
+                  <div class="small text-muted">完成 10 关挑战</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-4">
+              <div class="badge-card card rounded-3 h-100" data-badge="quiz_100">
+                <div class="card-body text-center py-3">
+                  <i class="fas fa-star fa-2x mb-2 badge-icon"></i>
+                  <div class="small fw-600">满分达人</div>
+                  <div class="small text-muted">闯关得分 100</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-4">
+              <div class="badge-card card rounded-3 h-100" data-badge="report_done">
+                <div class="card-body text-center py-3">
+                  <i class="fas fa-file-alt fa-2x mb-2 badge-icon"></i>
+                  <div class="small fw-600">周报生成</div>
+                  <div class="small text-muted">生成 1 次节能周报</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-4">
+              <div class="badge-card card rounded-3 h-100" data-badge="predict_5">
+                <div class="card-body text-center py-3">
+                  <i class="fas fa-chart-line fa-2x mb-2 badge-icon"></i>
+                  <div class="small fw-600">探索者</div>
+                  <div class="small text-muted">累计预测 5 次</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-4">
+              <div class="badge-card card rounded-3 h-100" data-badge="eco_fan">
+                <div class="card-body text-center py-3">
+                  <i class="fas fa-leaf fa-2x mb-2 badge-icon"></i>
+                  <div class="small fw-600">环保粉丝</div>
+                  <div class="small text-muted">预测+闯关+周报各 1 次</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 节能贴士汇总 -->
+    <section id="tips" class="tips-section mt-5 section-reveal">
+      <div class="card border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-4">
+          <h2 class="h5 mb-4 section-title"><i class="fas fa-lightbulb me-2 accent-mint"></i>节能贴士</h2>
+          <div class="row g-2" id="tipsGrid">
+            <div class="col-12 col-md-6"><div class="tip-item rounded-3 p-3"><i class="fas fa-thermometer-half me-2 accent-mint"></i>空调 26℃ 最省电又舒适</div></div>
+            <div class="col-12 col-md-6"><div class="tip-item rounded-3 p-3"><i class="fas fa-sun me-2 accent-mint"></i>白天关靠窗的灯，用自然光</div></div>
+            <div class="col-12 col-md-6"><div class="tip-item rounded-3 p-3"><i class="fas fa-power-off me-2 accent-mint"></i>人走关灯关空调</div></div>
+            <div class="col-12 col-md-6"><div class="tip-item rounded-3 p-3"><i class="fas fa-battery-full me-2 accent-mint"></i>废旧电池投有害垃圾</div></div>
+            <div class="col-12 col-md-6"><div class="tip-item rounded-3 p-3"><i class="fas fa-bicycle me-2 accent-mint"></i>短距离步行或骑行</div></div>
+            <div class="col-12 col-md-6"><div class="tip-item rounded-3 p-3"><i class="fas fa-laptop me-2 accent-mint"></i>电脑不用时关机或休眠</div></div>
+            <div class="col-12 col-md-6"><div class="tip-item rounded-3 p-3"><i class="fas fa-plug me-2 accent-mint"></i>充电器不用时拔掉</div></div>
+            <div class="col-12 col-md-6"><div class="tip-item rounded-3 p-3"><i class="fas fa-print me-2 accent-mint"></i>双面打印、先预览再打</div></div>
+            <div class="col-12 col-md-6"><div class="tip-item rounded-3 p-3"><i class="fas fa-stairs me-2 accent-mint"></i>1～3 层走楼梯</div></div>
+            <div class="col-12 col-md-6"><div class="tip-item rounded-3 p-3"><i class="fas fa-recycle me-2 accent-mint"></i>塑料瓶投可回收物</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 节能助手对话（无需 API Key，纯本地规则） -->
+    <section id="chat" class="chat-section mt-5 section-reveal">
+      <div class="card border-0 rounded-4 overflow-hidden chat-card">
+        <div class="card-body p-0">
+          <h2 class="h5 mb-0 section-title chat-header"><i class="fas fa-comments me-2 accent-mint"></i>节能助手</h2>
+          <p class="chat-desc small text-muted mb-0">问问空调、关灯、回收、闯关… 无需注册，直接聊</p>
+          <div class="chat-messages" id="chatMessages">
+            <div class="chat-msg chat-msg-bot">
+              <span class="chat-msg-avatar"><i class="fas fa-leaf"></i></span>
+              <div class="chat-msg-bubble">你好～我是节能小助手，可以问我：空调怎么省电？关灯有什么好处？电池怎么回收？也可以去试试「知识闯关」和「我的周报」～</div>
+            </div>
+          </div>
+          <div class="chat-input-wrap">
+            <input type="text" class="chat-input" id="chatInput" placeholder="输入问题，如：空调怎么省电？" maxlength="200" autocomplete="off">
+            <button type="button" class="chat-send-btn" id="chatSendBtn" aria-label="发送"><i class="fas fa-paper-plane"></i></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="site-footer mt-5 py-4">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
+            <span class="text-muted small"><i class="fas fa-leaf me-1 accent-mint"></i>EcoCampus AI 校园节能指挥官</span>
+          </div>
+          <div class="col-md-6 text-center text-md-end">
+            <span class="text-muted small">智慧校园 · 绿色节能 · AI 赋能</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- 周报结果弹窗 -->
+  <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title" id="reportModalLabel"><i class="fas fa-file-alt me-2 accent-mint"></i>节能周报</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+        </div>
+        <div class="modal-body pt-0">
+          <p id="reportModalBody" class="mb-0 report-modal-text report-content">加载中…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/report.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/stats.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+</body>
+</html>
